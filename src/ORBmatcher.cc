@@ -240,7 +240,10 @@ namespace ORB_SLAM3
         DBoW2::FeatureVector::const_iterator Fit = F.mFeatVec.begin();
         DBoW2::FeatureVector::const_iterator KFend = vFeatVecKF.end();
         DBoW2::FeatureVector::const_iterator Fend = F.mFeatVec.end();
-
+        if(KFit == KFend)
+            std::cout<<"KFit == KFend"<<std::endl;
+        if(Fit == Fend)
+            std::cout<<"Fit == Fend"<<std::endl;
         while(KFit != KFend && Fit != Fend)
         {
             if(KFit->first == Fit->first)

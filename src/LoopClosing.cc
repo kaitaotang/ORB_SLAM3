@@ -110,6 +110,7 @@ void LoopClosing::Run()
 #endif
 
             bool bFindedRegion = NewDetectCommonRegions();
+            //bFindedRegion = false;
 
 #ifdef REGISTER_TIMES
             std::chrono::steady_clock::time_point time_EndPR = std::chrono::steady_clock::now();

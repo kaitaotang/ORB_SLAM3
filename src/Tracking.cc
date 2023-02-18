@@ -48,6 +48,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
     mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpAtlas(pAtlas), mnLastRelocFrameId(0), time_recently_lost(5.0),
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr), mpLastKeyFrame(static_cast<KeyFrame*>(NULL))
 {
+    initialize_time = std::chrono::steady_clock::now();
     // Load camera parameters from settings file
     if(settings){
         newParameterLoader(settings);
@@ -1814,7 +1815,7 @@ void Tracking::Track()
     {
         cout << "ERROR: There is not an active map in the atlas" << endl;
     }
-
+    
     if(mState!=NO_IMAGES_YET)
     {
         if(mLastFrame.mTimeStamp>mCurrentFrame.mTimeStamp)
@@ -1930,6 +1931,7 @@ void Tracking::Track()
 #endif
 
         // Initial camera pose estimation using motion model or relocalization (if tracking is lost)
+        
         if(!mbOnlyTracking)
         {
 
@@ -2163,6 +2165,17 @@ void Tracking::Track()
             //}
         }
 
+        if(pCurrentMap->isImuInitialized() && pCurrentMap->GetIniertialBA2() && bOK )
+        {
+            std::chrono::steady_clock::time_point initialize_time_end = std::chrono::steady_clock::now();
+            double initial_time_cost = std::chrono::duration_cast<std::chrono::duration<double,std::milli> > \
+            (initialize_time_end - initialize_time).count();
+            initial_time_cost = initial_time_cost / 1e3;
+            int initialize_time_cost = initial_time_cost;
+            if(initial_time_cost < 100)
+                std::cout<<"Initialize cost: "<< initialize_time_cost<<" s"<<std::endl;
+        }
+
         // Save frame if recent relocalization, since they are used for IMU reset (as we are making copy, it shluld be once mCurrFrame is completely modified)
         if((mCurrentFrame.mnId<(mnLastRelocFrameId+mnFramesToResetIMU)) && (mCurrentFrame.mnId > mnFramesToResetIMU) &&
            (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) && pCurrentMap->isImuInitialized())
@@ -2374,7 +2387,7 @@ void Tracking::StereoInitialization()
 
         // Insert KeyFrame in the map
         mpAtlas->AddKeyFrame(pKFini);
-
+        std::cout<<"mpCamera2: "<<mpCamera2<<std::endl;
         // Create MapPoints and asscoiate to KeyFrame
         if(!mpCamera2){
             for(int i=0; i<mCurrentFrame.N;i++)
@@ -2726,7 +2739,8 @@ bool Tracking::TrackReferenceKeyFrame()
     // If enough matches are found we setup a PnP solver
     ORBmatcher matcher(0.7,true);
     vector<MapPoint*> vpMapPointMatches;
-
+    //std::cout<<"mpReferenceKF->id: "<<mpReferenceKF->mnId<<std::endl;
+    //std::cout<<"mCurrentFrame->id: "<<mCurrentFrame->mnId<<std::endl;
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
     if(nmatches<15)
@@ -3272,6 +3286,7 @@ void Tracking::CreateNewKeyFrame()
             sort(vDepthIdx.begin(),vDepthIdx.end());
 
             int nPoints = 0;
+
             for(size_t j=0; j<vDepthIdx.size();j++)
             {
                 int i = vDepthIdx[j].second;
@@ -3328,11 +3343,15 @@ void Tracking::CreateNewKeyFrame()
                 }
             }
             //Verbose::PrintMess("new mps for stereo KF: " + to_string(nPoints), Verbose::VERBOSITY_NORMAL);
+            std::cout<<"nPoints: "<<nPoints<<std::endl;
         }
     }
 
 
     mpLocalMapper->InsertKeyFrame(pKF);
+    std::cout<<"len(keyframe): "<<sizeof(pKF);
+    std::cout<<"len(mappoint): "<<sizeof(*(pKF->GetMapPoint(0)))<<std::endl;
+    std::cout<<"pKF: "<<pKF->GetMapPoints().size()<<std::endl;
 
     mpLocalMapper->SetNotStop(false);
 

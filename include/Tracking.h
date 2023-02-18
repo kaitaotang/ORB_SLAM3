@@ -193,7 +193,7 @@ public:
 #endif
 
 protected:
-
+    std::chrono::steady_clock::time_point initialize_time;
     // Main tracking function. It is independent of the input sensor.
     void Track();
 

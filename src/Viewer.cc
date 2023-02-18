@@ -174,7 +174,7 @@ void Viewer::Run()
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     pangolin::CreatePanel("menu").SetBounds(0.0,1.0,0.0,pangolin::Attach::Pix(175));
-    pangolin::Var<bool> menuFollowCamera("menu.Follow Camera",false,true);
+    pangolin::Var<bool> menuFollowCamera("menu.Follow Camera",true,true);
     pangolin::Var<bool> menuCamView("menu.Camera View",false,false);
     pangolin::Var<bool> menuTopView("menu.Top View",false,false);
     // pangolin::Var<bool> menuSideView("menu.Side View",false,false);
@@ -314,6 +314,9 @@ void Viewer::Run()
             mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,menuShowGraph, menuShowInertialGraph, menuShowOptLba);
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints();
+            
+        // Draw world frame
+        pangolin::glDrawAxis(30.0);
 
         pangolin::FinishFrame();
 

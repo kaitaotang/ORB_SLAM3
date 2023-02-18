@@ -1291,7 +1291,7 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA)
                 pKF2->bImu = true;
             }
     }
-
+    std::cout<<"@@@@size: "<<mpCurrentKeyFrame->mDescriptors.size()<<std::endl;
     mpTracker->UpdateFrameIMU(1.0,vpKF[0]->GetImuBias(),mpCurrentKeyFrame);
     if (!mpAtlas->isImuInitialized())
     {
