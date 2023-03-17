@@ -94,6 +94,21 @@ static rs2_option get_sensor_option(const rs2::sensor& sensor)
     return static_cast<rs2_option>(selected_sensor_option);
 }
 
+//按下s结束
+void Signal_thread(ORB_SLAM3::System* sys)
+{
+    while(1)
+    {
+        char c = getchar();
+        if (c == 's')
+        {
+            sys->Shutdown();
+        }
+        std::chrono::milliseconds dura(5);
+        std::this_thread::sleep_for(dura);
+    }
+}
+
 int main(int argc, char **argv) {
 
     if (argc < 3 || argc > 4) {
@@ -134,27 +149,34 @@ int main(int argc, char **argv) {
     std::vector<rs2::sensor> sensors = selected_device.query_sensors();
     int index = 0;
     // We can now iterate the sensors and print their names
+    std::cout<<"Enter Stereo-Inertial REALSENSE!!! have "<<sensors.size()<<" camera "<<std::endl;
     for (rs2::sensor sensor : sensors)
         if (sensor.supports(RS2_CAMERA_INFO_NAME)) {
             ++index;
-            if (index == 1) {
+            if (sensor.supports(RS2_OPTION_EMITTER_ENABLED))
+		    {
+                std::cout<<"Set EMITTER: 0"<<std::endl;
+			    sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0.f); // Disable emitter
+		    }
+            if (index == 1 && sensor.supports(RS2_OPTION_ENABLE_AUTO_EXPOSURE)) {
+                std::cout<<"Set AUTO_EXPOSURE: 1"<<std::endl;
                 sensor.set_option(RS2_OPTION_ENABLE_AUTO_EXPOSURE, 1);
-                sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
-                sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 0); // switch off emitter
+                // if(sensor.supports(RS2_OPTION_AUTO_EXPOSURE_LIMIT))
+                //     sensor.set_option(RS2_OPTION_AUTO_EXPOSURE_LIMIT,5000);
             }
             // std::cout << "  " << index << " : " << sensor.get_info(RS2_CAMERA_INFO_NAME) << std::endl;
-            get_sensor_option(sensor);
-            if (index == 2){
-                // RGB camera (not used here...)
-                sensor.set_option(RS2_OPTION_EXPOSURE,100.f);
-            }
+            // get_sensor_option(sensor);
+            // if (index == 2){
+            //     // RGB camera (not used here...)
+            //     sensor.set_option(RS2_OPTION_EXPOSURE,100.f);
+            // }
 
-            if (index == 3){
-                sensor.set_option(RS2_OPTION_ENABLE_MOTION_CORRECTION,0);
-            }
+            // if (index == 3){
+            //     sensor.set_option(RS2_OPTION_ENABLE_MOTION_CORRECTION,0);
+            // }
 
         }
-
+    std::cout<<"Finsh Realsense settings!!"<<std::endl;
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
     // Create a configuration for configuring the pipeline with a non default profile
@@ -331,6 +353,7 @@ int main(int argc, char **argv) {
 
     double t_resize = 0.f;
     double t_track = 0.f;
+    std::thread* signal_thread = new thread(Signal_thread, &SLAM);
 
     while (!SLAM.isShutDown())
     {
@@ -442,7 +465,8 @@ int main(int argc, char **argv) {
         // Clear the previous IMU measurements to load the new ones
         vImuMeas.clear();
     }
-    cout << "System shutdown!\n";
+    cout << "System Shutdown!\n";
+    SLAM.Shutdown();
 }
 
 rs2_vector interpolateMeasure(const double target_time,

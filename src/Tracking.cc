@@ -3343,15 +3343,15 @@ void Tracking::CreateNewKeyFrame()
                 }
             }
             //Verbose::PrintMess("new mps for stereo KF: " + to_string(nPoints), Verbose::VERBOSITY_NORMAL);
-            std::cout<<"nPoints: "<<nPoints<<std::endl;
+            //std::cout<<"nPoints: "<<nPoints<<std::endl;
         }
     }
 
 
     mpLocalMapper->InsertKeyFrame(pKF);
-    std::cout<<"len(keyframe): "<<sizeof(pKF);
-    std::cout<<"len(mappoint): "<<sizeof(*(pKF->GetMapPoint(0)))<<std::endl;
-    std::cout<<"pKF: "<<pKF->GetMapPoints().size()<<std::endl;
+    // std::cout<<"len(keyframe): "<<sizeof(pKF);
+    // std::cout<<"len(mappoint): "<<sizeof(*(pKF->GetMapPoint(0)))<<std::endl;
+    // std::cout<<"pKF: "<<pKF->GetMapPoints().size()<<std::endl;
 
     mpLocalMapper->SetNotStop(false);
 
